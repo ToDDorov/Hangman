@@ -1,4 +1,12 @@
+# frozen_string_literal: true
+
+require 'json'
+
 class Visualizer
+  def initialize
+    @body_progression = JSON.parse File.read('hangman_body.json')
+  end
+
   def display_board(game_word, guess, misses)
     puts "Word: #{game_word}"
     puts "Guess: #{guess}"
@@ -7,49 +15,11 @@ class Visualizer
   end
 
   def draw_body(misses_length)
-    case misses_length
-    when 0
-      puts '-----|======'
-      puts '-----O----||'
-      puts '---/-|-\--||'
-      puts '----/-\---||'
-      puts '__________||'
-    when 1
-      puts '-----|======'
-      puts '-----O----||'
-      puts '----------||'
-      puts '----------||'
-      puts '__________||'
-    when 2
-      puts '-----|======'
-      puts '-----O----||'
-      puts '-----|----||'
-      puts '----------||'
-      puts '__________||'
-    when 3
-      puts '-----|======='
-      puts '-----O----||'
-      puts '---/-|----||'
-      puts '----------||'
-      puts '__________||'
-    when 4
-      puts '-----|======='
-      puts '-----O----||'
-      puts '---/-|-\--||'
-      puts '----------||'
-      puts '__________||'
-    when 5
-      puts '-----|======'
-      puts '-----O----||'
-      puts '---/-|-\--||'
-      puts '----/-----||'
-      puts '___/______||'
-    when 6
-      puts '-----|======'
-      puts '-----O----||'
-      puts '---/-|-\--||'
-      puts '----/-\---||'
-      puts '___/___\__||'
+    body_number = misses_length.to_s
+    body = @body_progression[body_number]
+
+    body.each do |part|
+      puts part
     end
   end
 end

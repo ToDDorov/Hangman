@@ -1,14 +1,21 @@
+# frozen_string_literal: true
+
 require_relative 'visualizer'
+require_relative 'progress_controller'
+require 'json'
 
 class Hangman
   LIVES = 6
+  SAVE_COMMAND = '-save'
+  LOAD_COMMAND = '-load'
+  PROGRESS_FOLDER_NAME = 'progress'
 
   def initialize
     @game_over = false
     @correct_letters = []
     @misses = []
-
     @dictionary = []
+
     File.open('5desk.txt', 'r').readlines.each do |line|
       clean_line = line.strip
       @dictionary.push(clean_line) if clean_line.length > 4 && clean_line.length < 13
@@ -16,6 +23,7 @@ class Hangman
 
     @game_word = @dictionary.sample
     @visualizer = Visualizer.new
+    @progress_controller = ProgressController.new
   end
 
   def start_game
@@ -27,17 +35,53 @@ class Hangman
 
   def main_loop
     until game_over
-      puts 'Enter you letter: '
-      guess = gets.strip
+      puts 'Type -save to save your progress, type -load to load a save file or type a letter to continue the game:'
+      user_input = gets.strip
 
-      if guess.length > 1 || guess.match?(/-?[0-9]/)
-        puts 'Enter a single letter!'
+      if user_input.length == 1
+        continue_game(user_input)
       else
-        check_is_guess_correct(guess)
-
-        @visualizer.display_board(build_correct_word, guess, @misses)
+        on_command_enter(user_input)
       end
     end
+  end
+
+  def continue_game(guess)
+    if guess.match?(/-?[0-9]/)
+      puts 'Enter a single letter!'
+    else
+      check_is_guess_correct(guess)
+
+      @visualizer.display_board(build_correct_word, guess, @misses)
+    end
+  end
+
+  def on_command_enter(command)
+    if command.match?(SAVE_COMMAND)
+      data = {
+        game_word: @game_word,
+        correct_letters: @correct_letters,
+        wrong_letters: @misses
+      }
+
+      @progress_controller.save(data)
+    elsif command.match?(LOAD_COMMAND)
+      load_progress
+    else
+      puts 'You have type unsupported commad. Type -save or -load.'
+    end
+  end
+
+  def load_progress
+    data = @progress_controller.get_load_data
+
+    return if data.nil?
+
+    @game_word = data['game_word']
+    @correct_letters = data['correct_letters'].map(&:clone)
+    @misses = data['wrong_letters'].map(&:clone)
+
+    puts 'Game loaded!'
   end
 
   def on_game_over
